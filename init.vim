@@ -1,4 +1,15 @@
+call plug#begin()
+  Plug 'preservim/nerdtree'
+  Plug 'github/copilot.vim'
+  Plug 'nvim-lua/plenary.nvim'
+  Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.8' }
+  Plug 'nvim-pack/nvim-spectre'
+  Plug 'FrankRoeder/parrot.nvim'
+call plug#end()
+
 " general
+  colorscheme shine
+
   let mapleader = " "
   set number
   set nowrap
@@ -48,10 +59,8 @@
   au BufNewFile,BufRead * let w:tab_after_sp  = matchadd('ErrorMsg', '\v( +)\zs(\t+)', -1)
 
 " F keys
-  " fix tabs
-  nnoremap <silent> <F3> :%s/\s\+$//<CR>:let @/=''<CR>
-  " highlight tabs
-  nnoremap <silent> <F4> :match Error /\t/<CR>
+  " fix trailing whitespaces
+  nnoremap <silent> <F12> :%s/\s\+$//<CR>:let @/=''<CR>
 
 " folding
   set foldmethod=indent
@@ -68,47 +77,46 @@
   autocmd BufWinEnter * if &buftype != 'quickfix' && getcmdwintype() == '' | silent NERDTreeMirror | endif
 
 
-" autocomplete
+" ai autocomplete
   let g:copilot_no_tab_map = v:true
-  imap <tab> <Plug>(copilot-accept-word)
-  nnoremap <silent> <F1> :Copilot panel<CR>zi
-  inoremap <silent> <F1> <esc> :Copilot panel<CR>zi
-  nnoremap <silent> <F2> :Copilot disable<CR>
-  imap <C-Right> <Plug>(copilot-next)
-  imap <C-Left> <Plug>(copilot-previous)
-  imap <C-Down> <Plug>(copilot-accept-line)
-  imap <silent><script><expr> <C-Up> copilot#Accept("\<CR>")
+  inoremap <tab> <Plug>(copilot-accept-word)
+  inoremap <C-Right> <Plug>(copilot-next)
+  inoremap <C-Left> <Plug>(copilot-previous)
+  inoremap <C-Down> <Plug>(copilot-accept-line)
+  inoremap <silent> <script> <expr> <C-Up> copilot#Accept("\<CR>")
 
-" search
-" TODO
+  nnoremap <silent> <F1> :PrtTabnew<CR>
+  vnoremap <silent> <F1> :PrtTabnew<CR>
 
-" bookmarks
-" TODO
+  vnoremap <silent> <F2> :PrtRewrite<CR>
 
-call plug#begin()
-  Plug 'preservim/nerdtree'
-  Plug 'github/copilot.vim'
-call plug#end()
+  vnoremap <silent> <F3> :Copilot panel<CR>zi
 
-" Old Trash
-" set wildignore+=*/coverage/**
-" set wildignore+=*/vendor/**
-" set wildignore+=*/tmp/**
-" set wildignore+=*/log/**
-" function! Find(word)
-"   tabnew
-"   execute ':vimgrep /'.a:word.'/gj ./**/*'
-"   execute ':cw'
-"   execute ':.cc'
-"   execute "normal! zR"
-" endfunction
-" function! FindCurrent()
-"   call Find(expand("<cword>"))
-" endfunction
-" :command! -nargs=1 Find call Find('<args>')
-" :command! -nargs=1 F    call Find('<args>')
-" nnoremap <leader>w :call FindCurrent()<CR>
-" nnoremap <leader>e :.cc<CR>zR
-" nnoremap <leader>j <C-w>jj:.cc<CR>zR
-" nnoremap <leader>k <C-w>jk:.cc<CR>zR
-" nnoremap <leader>o $v%lohc<CR><CR><Up><C-r>"<Esc>:s/,/,\r/g<CR>:'[,']norm ==<CR>
+  nnoremap <silent> <F4> :Copilot disable<CR>
+
+" search & replace
+  set wildignore+=*/coverage/**
+  set wildignore+=*/vendor/**
+  set wildignore+=*/tmp/**
+  set wildignore+=*/log/**
+  nnoremap <silent> <F5> :Telescope find_files<CR>
+  nnoremap <silent> <F6> :Telescope live_grep<CR>
+  nnoremap <silent> <expr> <F7> ':Telescope find_files<cr>' . expand('<cword>')
+  nnoremap <silent> <F8> :tabnew<CR>:Spectre<CR>
+  nnoremap <silent> <F9> <cmd>lua require('spectre.actions').run_current_replace()<CR>
+  nnoremap <silent> <F10> <cmd>lua require('spectre.actions').run_replace()<CR>
+
+" init parrot
+lua << EOF
+require("parrot").setup {
+  -- Providers must be explicitly added to make them available.
+  providers = {
+    -- pplx = {
+    --   api_key = os.getenv "PERPLEXITY_API_KEY",
+    -- },
+    openai = {
+      api_key = os.getenv "OPENAI_API_KEY",
+    },
+  },
+}
+EOF
